@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cheapest Route</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+    }
+    header {
+      background: #007bff;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    #map {
+      height: 50vh;
+      width: 100%;
+    }
+    .footer {
+      text-align: center;
+      margin: 15px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #28a745;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .btn:hover {
+      background: #218838;
+    }
+    .fuel-cost {
+      font-size: 1.2em;
+      margin-top: 10px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🚙 Cheapest Route</h1>
+    <p>Includes fuel stops to save you money</p>
+  </header>
+
+  <div id="map"></div>
+
+  <div class="footer">
+    <div class="fuel-cost" id="fuel-cost"></div>
+    <a href="{% url 'home' %}" class="btn">🔄 Plan Another Trip</a>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const routeData = {{ route_data|safe }};
+    const fromCoords = routeData.from.split(',').map(Number);
+    const toCoords = routeData.to.split(',').map(Number);
+    const refuelPoints = routeData.refueling_points || [];
+    const distance = routeData.distance_miles;
+
+    const routeCoords = [fromCoords, ...refuelPoints.map(p => [p.lat, p.lon]), toCoords];
+    const midLat = (fromCoords[0] + toCoords[0]) / 2;
+    const midLng = (fromCoords[1] + toCoords[1]) / 2;
+
+    const map = L.map('map').setView([midLat, midLng], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const routeLine = L.polyline(routeCoords, { color: 'blue', weight: 5 }).addTo(map);
+    map.fitBounds(routeLine.getBounds());
+
+    L.marker(fromCoords).addTo(map).bindPopup("Start").openPopup();
+    L.marker(toCoords).addTo(map).bindPopup("Destination");
+
+    refuelPoints.forEach((point, index) => {
+      L.marker([point.lat, point.lon])
+        .addTo(map)
+        .bindPopup(`Refuel #${index + 1}: ${point.name}<br>Price: $${point.price.toFixed(2)}`);
+    });
+
+    // Fuel cost calculation logic
+// Fuel cost calculation logic
+const mpg = 10;
+const gallons = distance / mpg;
+
+let estimatedCost = 0;
+if (refuelPoints.length > 0) {
+  const avgPrice = refuelPoints.reduce((sum, p) => sum + p.price, 0) / refuelPoints.length;
+  estimatedCost = gallons * avgPrice;
+} else {
+  const defaultPrice = 3.50; // fallback price per gallon
+  estimatedCost = gallons * defaultPrice;
+}
+
+
+    document.getElementById("fuel-cost").textContent = `💰 Estimated fuel Cost: $${estimatedCost.toFixed(2)} (Distance: ${distance.toFixed(1)} mi)`;
+  </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Plan Your Route</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #map {
+      height: 60vh;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+    }
+    .info {
+      text-align: center;
+      margin-top: 15px;
+    }
+    button[type="submit"] {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 24px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h2>🗺️ Select Your Trip Route</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    <div id="map"></div>
+
+    <input type="hidden" id="start_location" name="start_location" required>
+    <input type="hidden" id="end_location" name="end_location" required>
+
+    <div class="info">
+      <p><strong>Start:</strong> <span id="start-coord">Not selected</span></p>
+      <p><strong>End:</strong> <span id="end-coord">Not selected</span></p>
+    </div>
+
+    <button type="submit">🚗 Get Cheapest Route</button>
+  </form>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const usBounds = [[24.396308, -125.0], [49.384358, -66.93457]];
+    const map = L.map('map', { maxBounds: usBounds, maxBoundsViscosity: 1.0 }).setView([37.8, -96], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 18,
+    }).addTo(map);
+
+    let startMarker = null, endMarker = null, selecting = 'start';
+
+    map.on('click', function(e) {
+      const { lat, lng } = e.latlng;
+
+      if (selecting === 'start') {
+        if (startMarker) map.removeLayer(startMarker);
+        startMarker = L.marker([lat, lng], {icon: L.icon({iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'})})
+          .addTo(map).bindPopup("Start").openPopup();
+        document.getElementById("start_location").value = `${lat},${lng}`;
+        document.getElementById("start-coord").innerText = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        selecting = 'end';
+      } else {
+        if (endMarker) map.removeLayer(endMarker);
+        endMarker = L.marker([lat, lng], {icon: L.icon({iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'})})
+          .addTo(map).bindPopup("End").openPopup();
+        document.getElementById("end_location").value = `${lat},${lng}`;
+        document.getElementById("end-coord").innerText = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        selecting = 'start';
+      }
+    });
+  </script>
+</body>
+</html>
