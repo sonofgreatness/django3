@@ -25,7 +25,7 @@ from .views import home, processed_route
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home , name= 'home'),
-    path('/processed_route', processed_route, name='processed_route'),
+    path('processed_route/', processed_route, name='processed_route'),
     path('api/', include('api.urls')),         # for programmatic access
     # OpenAPI schema generation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

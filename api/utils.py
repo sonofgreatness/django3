@@ -127,7 +127,7 @@ def process_trip_routes(trip_id, csv_path, max_range=500):
         lon = trip.start_lng + (trip.end_lng - trip.start_lng) * (i / (num_refuels + 1))
 
         nearby = [
-            s for s in stations if haversine_distance(lat, lon, s.lat, s.lon) < 3000
+            s for s in stations if haversine_distance(lat, lon, s.lat, s.lon) < 200
         ]
         logger.info(f"nearby => {nearby}")
         logger.info(f"loop lat => {lat} ,  long => {lon}")
